@@ -3,11 +3,12 @@ from bs4 import BeautifulSoup
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from google import google_translate
+
 
 def generate_pdf_from_web_content(url):
     # 设置请求头部，模拟浏览器访问
@@ -48,17 +49,31 @@ def generate_pdf_from_web_content(url):
 
                 # 添加文章标题
                 title_paragraph = Paragraph(title, title_style)
-                doc.build([title_paragraph])
 
                 # 添加文章内容
-                paragraphs = soup.find_all('p')
-                body_content = []
-                for paragraph in paragraphs:
-                    orig_content = paragraph.text
+                body_content = [title_paragraph, Spacer(1, 12)]  # Add space between title and body
+
+                for element in soup.find_all(['p', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote']):
+                    print(element)
+                    if element.name == 'p':
+                        orig_content = element.get_text(strip=True)
+                    elif element.name in ['h2', 'h3']:
+                        orig_content = element.get_text(strip=True)
+                        orig_content = f'<b>{orig_content}</b>'  # Bold headers
+                    elif element.name in ['ul', 'ol']:
+                        orig_content = element.get_text(strip=True)
+                        orig_content = f'• {orig_content}'  # Bullet points
+                    elif element.name == 'li':
+                        orig_content = element.get_text(strip=True)
+                        orig_content = f'   • {orig_content}'  # Nested bullet points
+                    elif element.name == 'blockquote':
+                        orig_content = element.get_text(strip=True)
+                        orig_content = f'<i>{orig_content}</i>'  # Italicize blockquotes
+
                     translate_content = google_translate(orig_content)
-                    print(translate_content)
+
                     body_content.append(
-                        Paragraph(f"Original: {orig_content}<br/><br/>Translated: {translate_content}", body_style))
+                        Paragraph(f" {orig_content}<br/><br/>{translate_content}", body_style))
                 doc.build(body_content)
 
                 print(f"文章已保存为 {pdf_filename}")
@@ -71,6 +86,7 @@ def generate_pdf_from_web_content(url):
         except requests.exceptions.RequestException as e:
             print(f'发生其他请求异常: {e}')
 
+
 # 使用函数获取并保存文章内容为 PDF
-# url = "https://towardsdatascience.com/5-hard-truths-about-generative-ai-for-technology-leaders-4b119336bc85"
-# generate_pdf_from_web_content(url)
+url = "https://medium.com/@sharadokey/25-javascript-one-liner-that-will-help-you-code-like-a-pro-267843d66d67"
+generate_pdf_from_web_content(url)
