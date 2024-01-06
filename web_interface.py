@@ -2,7 +2,7 @@ import streamlit as st
 import os
 
 # 本地文件的路径
-file_path = "/Users/dalaoduan/project/privateGPT/poetry.lock"
+file_path = "/Users/project/privateGPT/poetry.lock"
 
 # 创建一个函数来处理文件下载
 def download_file():
